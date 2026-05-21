@@ -52,7 +52,11 @@ router.post('/linkedin/connect', authenticate, async (req, res) => {
     const { data: { user } } = await supabaseAdmin.auth.getUser(token);
 
     const linkedinIdentity = user.identities?.find(i => i.provider === 'linkedin_oidc');
-    const linkedinProfileUrl = linkedinIdentity?.identity_data?.profile_url || null;
+    if (!linkedinIdentity) {
+      return res.status(400).json({ error: { code: 'LINKEDIN_NOT_LINKED', message: 'LinkedIn account not linked via Supabase.' } });
+    }
+
+    const linkedinProfileUrl = req.body.linkedinProfileUrl || null;
 
     const updated = await prisma.user.update({
       where: { id: req.user.id },
