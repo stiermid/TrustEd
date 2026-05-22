@@ -71,12 +71,15 @@ export default function CourseDetailPage() {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const [courseRes, discoverRes] = await Promise.all([
+      const [courseRes, discoverRes, enrollmentsRes] = await Promise.all([
         get(`/courses/${id}`),
         get(`/discover/courses/${id}`),
+        get('/users/me/enrollments'),
       ]);
       setCourse(courseRes);
       setDiscover(discoverRes.data);
+      const myEnrollment = enrollmentsRes.data.find(e => e.course.id === id);
+      setEnrollStatus(myEnrollment?.status ?? null);
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
   }, [id]);
@@ -181,8 +184,12 @@ export default function CourseDetailPage() {
           </div>
           {/* Enroll CTA */}
           <div>
-            {enrollStatus === 'PENDING'
+            {enrollStatus === 'VERIFIED'
+              ? <span style={{ fontSize: 13, color: '#057642', padding: '8px 16px', border: '1px solid #a7f3d0', borderRadius: 8, background: '#f0fdf4', display: 'block' }}>✅ Enrollment verified</span>
+              : enrollStatus === 'PENDING'
               ? <span style={{ fontSize: 13, color: '#888', padding: '8px 16px', border: '1px solid #E0E0E0', borderRadius: 8, background: '#fff', display: 'block' }}>⏳ Enrollment pending</span>
+              : enrollStatus === 'REJECTED'
+              ? <span style={{ fontSize: 13, color: '#dc2626', padding: '8px 16px', border: '1px solid #fca5a5', borderRadius: 8, background: '#fef2f2', display: 'block' }}>❌ Enrollment rejected</span>
               : !myReview && <button className="btn" onClick={handleEnroll} disabled={enrolling} style={{ borderRadius: 8 }}>{enrolling ? 'Enrolling…' : 'Enroll to Review'}</button>
             }
           </div>
@@ -250,8 +257,13 @@ export default function CourseDetailPage() {
                   <button key={v} onClick={() => setReviewSort(v)} style={{ padding: '5px 14px', borderRadius: 20, fontSize: 13, fontWeight: 500, cursor: 'pointer', border: '1.5px solid', borderColor: reviewSort === v ? 'var(--accent)' : '#E0E0E0', background: reviewSort === v ? 'var(--accent-bg)' : '#fff', color: reviewSort === v ? 'var(--accent)' : '#666', transition: 'all 0.15s' }}>{l}</button>
                 ))}
               </div>
-              {!myReview && !showForm && (
+              {!myReview && !showForm && enrollStatus === 'VERIFIED' && (
                 <button className="btn btn-sm" style={{ borderRadius: 8 }} onClick={() => setShowForm(true)}>+ Write a Review</button>
+              )}
+              {!myReview && !showForm && enrollStatus !== 'VERIFIED' && (
+                <span style={{ fontSize: 13, color: '#888' }}>
+                  {enrollStatus === 'PENDING' ? '⏳ Awaiting enrollment verification' : enrollStatus === 'REJECTED' ? '❌ Enrollment rejected' : 'Enroll to write a review'}
+                </span>
               )}
             </div>
 
