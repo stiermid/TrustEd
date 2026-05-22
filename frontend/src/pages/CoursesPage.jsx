@@ -42,7 +42,6 @@ function Stars({ rating }) {
 function InstitutionCard({ provider, courses, onViewCourses }) {
   const meta = getMeta(provider);
   const totalReviews = courses.reduce((s, c) => s + (c.reviewCount || 0), 0);
-  const [followed, setFollowed] = useState(false);
 
   return (
     <div style={{ background: '#fff', border: '1px solid #E0E0E0', borderRadius: 10, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
@@ -72,12 +71,8 @@ function InstitutionCard({ provider, courses, onViewCourses }) {
         </div>
         {/* Buttons */}
         <div style={{ display: 'flex', gap: 10 }}>
-          <button onClick={() => setFollowed(f => !f)}
-            style={{ flex: 1, padding: '8px 0', borderRadius: 24, border: followed ? '1.5px solid #E0E0E0' : '1.5px solid #0a66c2', background: followed ? '#fff' : '#0a66c2', color: followed ? '#444' : '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', transition: 'all 0.15s' }}>
-            {followed ? '✓ Following' : '+ Follow'}
-          </button>
           <button onClick={() => onViewCourses(provider)}
-            style={{ flex: 1, padding: '8px 0', borderRadius: 24, border: '1.5px solid #E0E0E0', background: '#fff', color: '#191919', fontSize: 14, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s' }}>
+            style={{ flex: 1, padding: '8px 0', borderRadius: 24, border: '1.5px solid #0a66c2', background: '#0a66c2', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s' }}>
             View Courses
           </button>
         </div>

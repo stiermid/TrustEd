@@ -101,7 +101,7 @@ export default function ProfilePage() {
   async function handleConnectLinkedIn() {
     setConnectingLinkedIn(true); setLinkedInMsg(null);
     try {
-      const { error } = await supabase.auth.linkIdentity({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'linkedin_oidc',
         options: { redirectTo: window.location.origin + '/profile' },
       });
@@ -110,17 +110,6 @@ export default function ProfilePage() {
       setLinkedInMsg(err.message || 'Could not initiate LinkedIn connection.');
       setConnectingLinkedIn(false);
     }
-  }
-
-  async function handleSyncLinkedIn() {
-    setConnectingLinkedIn(true); setLinkedInMsg(null);
-    try {
-      const updated = await post('/auth/linkedin/connect', {});
-      setProfile(prev => ({ ...(prev || user), ...updated }));
-      setLinkedInMsg('LinkedIn connected successfully!');
-    } catch (err) {
-      setLinkedInMsg(err.error?.message || 'LinkedIn sync failed.');
-    } finally { setConnectingLinkedIn(false); }
   }
 
   async function handleRespond(id, status) {
@@ -220,11 +209,8 @@ export default function ProfilePage() {
                 ) : (
                   <div>
                     <p className="text-sm text-muted" style={{ marginBottom: 10 }}>Connect LinkedIn to be eligible for enrollment verification.</p>
-                    {linkedInMsg && <div className="alert-info" style={{ marginBottom: 10 }}>{linkedInMsg}</div>}
-                    <div className="flex gap-2">
-                      <button className="btn btn-sm" onClick={handleConnectLinkedIn} disabled={connectingLinkedIn}>{connectingLinkedIn ? '…' : 'Connect LinkedIn'}</button>
-                      <button className="btn-outline btn-sm" onClick={handleSyncLinkedIn} disabled={connectingLinkedIn}>Sync (already linked)</button>
-                    </div>
+                    {linkedInMsg && <div className="alert-error" style={{ marginBottom: 10 }}>{linkedInMsg}</div>}
+                    <button className="btn btn-sm" onClick={handleConnectLinkedIn} disabled={connectingLinkedIn}>{connectingLinkedIn ? '…' : 'Connect LinkedIn'}</button>
                   </div>
                 )}
               </div>
