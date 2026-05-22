@@ -206,9 +206,16 @@ export default function ProfilePage() {
                 <hr className="divider" />
                 <p style={{ fontWeight: 600, color: 'var(--text-h)', marginBottom: 8, fontSize: 14 }}>LinkedIn Verification</p>
                 {displayUser.linkedinConnected ? (
-                  <div className="flex gap-3" style={{ alignItems: 'center' }}>
-                    <span className="badge badge-verified">Connected</span>
-                    <span className="text-sm text-muted">Required for enrollment verification.</span>
+                  <div>
+                    <div className="flex gap-3" style={{ alignItems: 'center', marginBottom: displayUser.linkedinProfileUrl ? 0 : 10 }}>
+                      <span className="badge badge-verified">Connected</span>
+                      <span className="text-sm text-muted">Required for enrollment verification.</span>
+                    </div>
+                    {!displayUser.linkedinProfileUrl && (
+                      <p className="text-sm text-muted" style={{ marginTop: 8 }}>
+                        Add your LinkedIn profile URL via <button className="btn-ghost btn-sm" style={{ padding: 0, color: 'var(--accent)', display: 'inline' }} onClick={startEdit}>Edit Profile</button> so admins can verify your enrollment.
+                      </p>
+                    )}
                   </div>
                 ) : (
                   <div>
