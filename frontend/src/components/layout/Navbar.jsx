@@ -6,6 +6,7 @@ export default function Navbar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [avatarErr, setAvatarErr] = useState(false);
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -21,7 +22,7 @@ export default function Navbar() {
   async function handleLogout() {
     setDropdownOpen(false);
     await logout();
-    navigate('/login');
+    navigate('/');
   }
 
   return (
@@ -31,6 +32,7 @@ export default function Navbar() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
         <NavLink to="/courses" style={({ isActive }) => ({ fontSize: 13, fontWeight: 500, color: isActive ? 'var(--text-h)' : 'var(--text)', textDecoration: 'none', padding: '6px 12px', borderRadius: 6, transition: 'color 0.15s' })}>Courses</NavLink>
         {user && <>
+          <NavLink to="/updates" style={({ isActive }) => ({ fontSize: 13, fontWeight: 500, color: isActive ? 'var(--text-h)' : 'var(--text)', textDecoration: 'none', padding: '6px 12px', borderRadius: 6, transition: 'color 0.15s' })}>Updates</NavLink>
           <NavLink to="/connections" style={({ isActive }) => ({ fontSize: 13, fontWeight: 500, color: isActive ? 'var(--text-h)' : 'var(--text)', textDecoration: 'none', padding: '6px 12px', borderRadius: 6, transition: 'color 0.15s' })}>Network</NavLink>
           {user.role === 'ADMIN' && <NavLink to="/admin" style={({ isActive }) => ({ fontSize: 13, fontWeight: 500, color: isActive ? 'var(--text-h)' : 'var(--text)', textDecoration: 'none', padding: '6px 12px', borderRadius: 6 })}>Admin</NavLink>}
         </>}
@@ -43,8 +45,8 @@ export default function Navbar() {
               onClick={() => setDropdownOpen(o => !o)}
               style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 10px 4px 6px', borderRadius: 24, border: '1px solid var(--border)', cursor: 'pointer', background: '#fff', userSelect: 'none' }}
             >
-              {user.avatarUrl
-                ? <img src={user.avatarUrl} alt={user.name} style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover' }} />
+              {user.avatarUrl && !avatarErr
+                ? <img src={user.avatarUrl} alt={user.name} onError={() => setAvatarErr(true)} style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover' }} />
                 : <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--accent-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: 'var(--accent)' }}>{user.name?.[0]?.toUpperCase()}</div>
               }
               <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-h)', maxWidth: 110, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.name}</span>

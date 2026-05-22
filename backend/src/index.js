@@ -8,6 +8,7 @@ const courseRoutes = require('./routes/courses');
 const enrollmentRoutes = require('./routes/enrollments');
 const reviewRoutes = require('./routes/reviews');
 const connectionRoutes = require('./routes/connections');
+const updateRoutes = require('./routes/updates');
 
 const app = express();
 
@@ -23,6 +24,7 @@ app.use('/api/v1/courses', courseRoutes);
 app.use('/api/v1', enrollmentRoutes);
 app.use('/api/v1', reviewRoutes);
 app.use('/api/v1', connectionRoutes);
+app.use('/api/v1', updateRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err);

@@ -5,8 +5,9 @@ import { supabase } from '../lib/supabase';
 import Navbar from '../components/layout/Navbar';
 
 function Avatar({ user, size = 64 }) {
-  if (user?.avatarUrl) {
-    return <img src={user.avatarUrl} alt={user.name} style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover' }} />;
+  const [err, setErr] = useState(false);
+  if (user?.avatarUrl && !err) {
+    return <img src={user.avatarUrl} alt={user.name} onError={() => setErr(true)} style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover' }} />;
   }
   return (
     <div style={{
@@ -44,6 +45,9 @@ export default function ProfilePage() {
   const [enrollments, setEnrollments] = useState([]);
   const [coursesLoading, setCoursesLoading] = useState(false);
 
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+
   const [connections, setConnections] = useState([]);
   const [requests, setRequests] = useState([]);
   const [connLoading, setConnLoading] = useState(false);
@@ -60,6 +64,15 @@ export default function ProfilePage() {
     finally { setCoursesLoading(false); }
   }, []);
 
+  const loadReviews = useCallback(async () => {
+    setReviewsLoading(true);
+    try {
+      const res = await get('/users/me/reviews');
+      setReviews(res.data);
+    } catch (err) { console.error(err); }
+    finally { setReviewsLoading(false); }
+  }, []);
+
   const loadConnections = useCallback(async () => {
     setConnLoading(true);
     try {
@@ -73,7 +86,8 @@ export default function ProfilePage() {
   useEffect(() => {
     if (tab === 'courses') loadCourses();
     if (tab === 'connections') loadConnections();
-  }, [tab, loadCourses, loadConnections]);
+    if (tab === 'reviews') loadReviews();
+  }, [tab, loadCourses, loadConnections, loadReviews]);
 
   if (authLoading) return <><Navbar /><div className="loading">Loading…</div></>;
 
@@ -153,7 +167,7 @@ export default function ProfilePage() {
 
         {/* ── Tabs ── */}
         <div className="tabs" style={{ marginTop: 24 }}>
-          {[['profile', 'Profile'], ['courses', 'My Courses'], ['connections', `Connections${requests.length > 0 ? ` (${requests.length})` : ''}`]].map(([k, l]) => (
+          {[['profile', 'Profile'], ['courses', 'My Courses'], ['reviews', 'My Reviews'], ['connections', `Connections${requests.length > 0 ? ` (${requests.length})` : ''}`]].map(([k, l]) => (
             <button key={k} className={`tab${tab === k ? ' active' : ''}`} onClick={() => { setTab(k); setEditing(false); }}>{l}</button>
           ))}
         </div>
@@ -213,6 +227,35 @@ export default function ProfilePage() {
                     <button className="btn btn-sm" onClick={handleConnectLinkedIn} disabled={connectingLinkedIn}>{connectingLinkedIn ? '…' : 'Connect LinkedIn'}</button>
                   </div>
                 )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── My Reviews Tab ── */}
+        {tab === 'reviews' && (
+          <div style={{ paddingTop: 20 }}>
+            {reviewsLoading ? (
+              <div className="loading">Loading reviews…</div>
+            ) : reviews.length === 0 ? (
+              <div className="empty">You haven't written any reviews yet.</div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {reviews.map(r => (
+                  <div key={r.id} className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                      <div>
+                        <p style={{ margin: 0, fontWeight: 700, fontSize: 15, color: 'var(--text-h)' }}>{r.course.title}</p>
+                        <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--text)' }}>{r.course.provider}</p>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+                        <span style={{ color: '#f59e0b', fontSize: 14, letterSpacing: 1 }}>{'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}</span>
+                        <span style={{ fontSize: 12, color: '#aaa' }}>{new Date(r.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                      </div>
+                    </div>
+                    <p style={{ margin: 0, fontSize: 14, color: 'var(--text)', lineHeight: 1.6, borderLeft: '3px solid var(--border)', paddingLeft: 12 }}>{r.content}</p>
+                  </div>
+                ))}
               </div>
             )}
           </div>

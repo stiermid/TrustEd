@@ -3,7 +3,8 @@ import { get, post, patch, del } from '../lib/api';
 import Navbar from '../components/layout/Navbar';
 
 function Av({ user, size = 60 }) {
-  if (user?.avatarUrl) return <img src={user.avatarUrl} alt={user.name} style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '2px solid #e8e8e8' }} />;
+  const [err, setErr] = useState(false);
+  if (user?.avatarUrl && !err) return <img src={user.avatarUrl} alt={user.name} onError={() => setErr(true)} style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '2px solid #e8e8e8' }} />;
   return (
     <div style={{ width: size, height: size, borderRadius: '50%', background: 'var(--accent-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: size * 0.38, color: 'var(--accent)', fontWeight: 700, border: '2px solid var(--accent-border)', flexShrink: 0 }}>
       {user?.name?.[0]?.toUpperCase()}

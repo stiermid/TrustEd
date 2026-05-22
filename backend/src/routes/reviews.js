@@ -6,6 +6,20 @@ const optionalAuthenticate = require('../middleware/optionalAuthenticate');
 const requireAdmin = require('../middleware/requireAdmin');
 const { anonymizeReviews } = require('../utils/anonymize');
 
+// GET /users/me/reviews
+router.get('/users/me/reviews', authenticate, async (req, res) => {
+  try {
+    const reviews = await prisma.review.findMany({
+      where: { userId: req.user.id },
+      include: { course: { select: { id: true, title: true, provider: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json({ data: reviews });
+  } catch (err) {
+    res.status(500).json({ error: { code: 'INTERNAL_ERROR', message: 'Unexpected error.' } });
+  }
+});
+
 // GET /courses/:courseId/reviews
 router.get('/courses/:courseId/reviews', optionalAuthenticate, async (req, res) => {
   try {

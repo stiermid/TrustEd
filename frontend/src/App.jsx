@@ -9,6 +9,7 @@ import CoursesPage from './pages/CoursesPage';
 import CourseDetailPage from './pages/CourseDetailPage';
 import ProfilePage from './pages/ProfilePage';
 import ConnectionsPage from './pages/ConnectionsPage';
+import UpdatesPage from './pages/UpdatesPage';
 import AdminPage from './pages/AdminPage';
 
 export default function App() {
@@ -27,6 +28,7 @@ export default function App() {
           <Route element={<ProtectedRoute />}>
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/connections" element={<ConnectionsPage />} />
+            <Route path="/updates" element={<UpdatesPage />} />
           </Route>
 
           {/* Admin only */}

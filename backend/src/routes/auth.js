@@ -41,9 +41,10 @@ router.post('/sync', async (req, res) => {
         },
       });
     } else {
+      const avatarChanged = resolvedAvatar && dbUser.avatarUrl !== resolvedAvatar;
       const needsUpdate =
         (dbUser.name === dbUser.email && resolvedName !== dbUser.email) ||
-        (!dbUser.avatarUrl && resolvedAvatar) ||
+        avatarChanged ||
         (hasLinkedIn && !dbUser.linkedinConnected);
 
       if (needsUpdate) {
@@ -51,7 +52,7 @@ router.post('/sync', async (req, res) => {
           where: { supabaseId: user.id },
           data: {
             ...(dbUser.name === dbUser.email && { name: resolvedName }),
-            ...(!dbUser.avatarUrl && resolvedAvatar && { avatarUrl: resolvedAvatar }),
+            ...(avatarChanged && { avatarUrl: resolvedAvatar }),
             ...(hasLinkedIn && !dbUser.linkedinConnected && { linkedinConnected: true }),
           },
         });

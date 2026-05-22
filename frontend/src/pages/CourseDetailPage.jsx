@@ -19,6 +19,13 @@ function providerColor(name = '') {
   return { bg: '#057642', light: '#E6F4EC' };
 }
 
+function Av({ user, size = 40 }) {
+  const [err, setErr] = useState(false);
+  if (user?.avatarUrl && !err)
+    return <img src={user.avatarUrl} alt={user.name || ''} onError={() => setErr(true)} style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover' }} />;
+  return <span style={{ fontSize: size * 0.4, lineHeight: 1 }}>{user?.name?.[0]?.toUpperCase() ?? '?'}</span>;
+}
+
 function Stars({ rating }) {
   const full = Math.round(rating || 0);
   return <span className="stars">{'★'.repeat(full)}{'☆'.repeat(5 - full)}</span>;
@@ -299,7 +306,7 @@ export default function CourseDetailPage() {
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#F3F2EF', border: '2px solid #E0E0E0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>
-                      {review.author ? (review.author.avatarUrl ? <img src={review.author.avatarUrl} alt="" style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover' }} /> : review.author.name?.[0]?.toUpperCase()) : '🔒'}
+                      {review.author ? <Av user={review.author} size={40} /> : '🔒'}
                     </div>
                     <div>
                       <p style={{ margin: 0, fontWeight: 700, fontSize: 14, color: '#191919' }}>{review.author ? review.author.name : 'Anonymous Learner'}</p>
@@ -334,10 +341,9 @@ export default function CourseDetailPage() {
               <div className="empty">No other verified learners found for this course yet.</div>
             ) : discover.map(u => (
               <div key={u.id} style={{ background: '#fff', border: '1px solid #E0E0E0', borderRadius: 10, padding: '14px 18px', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 14 }}>
-                {u.avatarUrl
-                  ? <img src={u.avatarUrl} alt={u.name} style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover' }} />
-                  : <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'var(--accent-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 16, color: 'var(--accent)' }}>{u.name?.[0]?.toUpperCase()}</div>
-                }
+                <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'var(--accent-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 16, color: 'var(--accent)', overflow: 'hidden', flexShrink: 0 }}>
+                  <Av user={u} size={44} />
+                </div>
                 <span style={{ flex: 1, fontWeight: 600, fontSize: 14, color: '#191919' }}>{u.name}</span>
                 {u.connectionStatus === 'accepted' ? <span className="badge badge-verified">Connected</span>
                   : u.connectionStatus === 'pending' ? <span className="badge badge-pending">Pending</span>
