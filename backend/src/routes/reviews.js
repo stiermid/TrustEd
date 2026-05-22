@@ -2,32 +2,36 @@ const express = require('express');
 const router = express.Router();
 const prisma = require('../lib/prisma');
 const authenticate = require('../middleware/authenticate');
+const optionalAuthenticate = require('../middleware/optionalAuthenticate');
 const requireAdmin = require('../middleware/requireAdmin');
 const { anonymizeReviews } = require('../utils/anonymize');
 
 // GET /courses/:courseId/reviews
-router.get('/courses/:courseId/reviews', authenticate, async (req, res) => {
+router.get('/courses/:courseId/reviews', optionalAuthenticate, async (req, res) => {
   try {
     const { courseId } = req.params;
 
     const { sort = 'newest' } = req.query;
     const orderBy = sort === 'rating' ? { rating: 'desc' } : { createdAt: 'desc' };
 
-    const [reviews, connections] = await Promise.all([
-      prisma.review.findMany({
-        where: { courseId },
-        include: { user: { select: { id: true, name: true, avatarUrl: true } } },
-        orderBy,
-      }),
-      prisma.connection.findMany({
+    const reviews = await prisma.review.findMany({
+      where: { courseId },
+      include: { user: { select: { id: true, name: true, avatarUrl: true } } },
+      orderBy,
+    });
+
+    let connections = [];
+    if (req.user) {
+      connections = await prisma.connection.findMany({
         where: {
           status: 'ACCEPTED',
           OR: [{ requesterId: req.user.id }, { receiverId: req.user.id }],
         },
-      }),
-    ]);
+      });
+    }
 
-    res.json({ data: anonymizeReviews(reviews, req.user.id, connections) });
+    const userId = req.user?.id ?? null;
+    res.json({ data: anonymizeReviews(reviews, userId, connections) });
   } catch (err) {
     res.status(500).json({ error: { code: 'INTERNAL_ERROR', message: 'Unexpected error.' } });
   }

@@ -71,18 +71,21 @@ export default function CourseDetailPage() {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const [courseRes, discoverRes, enrollmentsRes] = await Promise.all([
-        get(`/courses/${id}`),
-        get(`/discover/courses/${id}`),
-        get('/users/me/enrollments'),
-      ]);
+      const courseRes = await get(`/courses/${id}`);
       setCourse(courseRes);
-      setDiscover(discoverRes.data);
-      const myEnrollment = enrollmentsRes.data.find(e => e.course.id === id);
-      setEnrollStatus(myEnrollment?.status ?? null);
+
+      if (user) {
+        const [discoverRes, enrollmentsRes] = await Promise.all([
+          get(`/discover/courses/${id}`),
+          get('/users/me/enrollments'),
+        ]);
+        setDiscover(discoverRes.data);
+        const myEnrollment = enrollmentsRes.data.find(e => e.course.id === id);
+        setEnrollStatus(myEnrollment?.status ?? null);
+      }
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
-  }, [id]);
+  }, [id, user]);
 
   const loadReviews = useCallback(async () => {
     try {
@@ -184,7 +187,9 @@ export default function CourseDetailPage() {
           </div>
           {/* Enroll CTA */}
           <div>
-            {enrollStatus === 'VERIFIED'
+            {!user
+              ? <button className="btn" onClick={() => navigate('/login')} style={{ borderRadius: 8 }}>Sign in to Enroll</button>
+              : enrollStatus === 'VERIFIED'
               ? <span style={{ fontSize: 13, color: '#057642', padding: '8px 16px', border: '1px solid #a7f3d0', borderRadius: 8, background: '#f0fdf4', display: 'block' }}>✅ Enrollment verified</span>
               : enrollStatus === 'PENDING'
               ? <span style={{ fontSize: 13, color: '#888', padding: '8px 16px', border: '1px solid #E0E0E0', borderRadius: 8, background: '#fff', display: 'block' }}>⏳ Enrollment pending</span>
@@ -257,13 +262,14 @@ export default function CourseDetailPage() {
                   <button key={v} onClick={() => setReviewSort(v)} style={{ padding: '5px 14px', borderRadius: 20, fontSize: 13, fontWeight: 500, cursor: 'pointer', border: '1.5px solid', borderColor: reviewSort === v ? 'var(--accent)' : '#E0E0E0', background: reviewSort === v ? 'var(--accent-bg)' : '#fff', color: reviewSort === v ? 'var(--accent)' : '#666', transition: 'all 0.15s' }}>{l}</button>
                 ))}
               </div>
-              {!myReview && !showForm && enrollStatus === 'VERIFIED' && (
-                <button className="btn btn-sm" style={{ borderRadius: 8 }} onClick={() => setShowForm(true)}>+ Write a Review</button>
-              )}
-              {!myReview && !showForm && enrollStatus !== 'VERIFIED' && (
-                <span style={{ fontSize: 13, color: '#888' }}>
-                  {enrollStatus === 'PENDING' ? '⏳ Awaiting enrollment verification' : enrollStatus === 'REJECTED' ? '❌ Enrollment rejected' : 'Enroll to write a review'}
-                </span>
+              {!myReview && !showForm && (
+                !user
+                  ? <button className="btn btn-sm" style={{ borderRadius: 8 }} onClick={() => navigate('/login')}>Sign in to Review</button>
+                  : enrollStatus === 'VERIFIED'
+                  ? <button className="btn btn-sm" style={{ borderRadius: 8 }} onClick={() => setShowForm(true)}>+ Write a Review</button>
+                  : <span style={{ fontSize: 13, color: '#888' }}>
+                      {enrollStatus === 'PENDING' ? '⏳ Awaiting enrollment verification' : enrollStatus === 'REJECTED' ? '❌ Enrollment rejected' : 'Enroll to write a review'}
+                    </span>
               )}
             </div>
 
@@ -316,7 +322,12 @@ export default function CourseDetailPage() {
         {/* ── People ── */}
         {tab === 'people' && (
           <div>
-            {discover.length === 0 ? (
+            {!user ? (
+              <div className="empty">
+                <p style={{ marginBottom: 12 }}>Sign in to see who else took this course and connect with them.</p>
+                <button className="btn btn-sm" onClick={() => navigate('/login')}>Sign In</button>
+              </div>
+            ) : discover.length === 0 ? (
               <div className="empty">No other verified learners found for this course yet.</div>
             ) : discover.map(u => (
               <div key={u.id} style={{ background: '#fff', border: '1px solid #E0E0E0', borderRadius: 10, padding: '14px 18px', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 14 }}>

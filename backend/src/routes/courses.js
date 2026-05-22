@@ -12,7 +12,7 @@ const COURSE_SELECT = {
 };
 
 // GET /courses
-router.get('/', authenticate, async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const { search, provider, category, featured, page = 1, limit = 20 } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
@@ -48,7 +48,7 @@ router.get('/', authenticate, async (req, res) => {
 });
 
 // GET /courses/:id
-router.get('/:id', authenticate, async (req, res) => {
+router.get('/:id', async (req, res) => {
   try {
     const course = await prisma.course.findUnique({ where: { id: req.params.id }, select: COURSE_SELECT });
     if (!course) return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Course not found.' } });

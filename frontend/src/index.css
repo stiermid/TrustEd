@@ -36,16 +36,26 @@ body {
   background: var(--bg);
 }
 
+@media (max-width: 640px) {
+  .hero-features {
+    grid-template-columns: 1fr !important;
+  }
+}
+
 #root {
   width: 100%;
-  max-width: 1440px;
-  margin: 0 auto;
   text-align: left;
   min-height: 100svh;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
   background: var(--bg);
+}
+
+.page-container {
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
 }
 
 h1, h2, h3 {
