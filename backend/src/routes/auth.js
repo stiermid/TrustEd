@@ -26,6 +26,7 @@ router.post('/sync', async (req, res) => {
       [meta.given_name, meta.family_name].filter(Boolean).join(' ') ||
       user.email;
     const resolvedAvatar = meta.avatar_url || meta.picture || null;
+    const hasLinkedIn = user.identities?.some(i => i.provider === 'linkedin_oidc') ?? false;
 
     let dbUser = await prisma.user.findUnique({ where: { supabaseId: user.id } });
 
@@ -36,16 +37,25 @@ router.post('/sync', async (req, res) => {
           email: user.email,
           name: resolvedName,
           avatarUrl: resolvedAvatar,
+          linkedinConnected: hasLinkedIn,
         },
       });
-    } else if (dbUser.name === dbUser.email || !dbUser.avatarUrl) {
-      dbUser = await prisma.user.update({
-        where: { supabaseId: user.id },
-        data: {
-          ...(dbUser.name === dbUser.email && { name: resolvedName }),
-          ...(!dbUser.avatarUrl && resolvedAvatar && { avatarUrl: resolvedAvatar }),
-        },
-      });
+    } else {
+      const needsUpdate =
+        (dbUser.name === dbUser.email && resolvedName !== dbUser.email) ||
+        (!dbUser.avatarUrl && resolvedAvatar) ||
+        (hasLinkedIn && !dbUser.linkedinConnected);
+
+      if (needsUpdate) {
+        dbUser = await prisma.user.update({
+          where: { supabaseId: user.id },
+          data: {
+            ...(dbUser.name === dbUser.email && { name: resolvedName }),
+            ...(!dbUser.avatarUrl && resolvedAvatar && { avatarUrl: resolvedAvatar }),
+            ...(hasLinkedIn && !dbUser.linkedinConnected && { linkedinConnected: true }),
+          },
+        });
+      }
     }
 
     res.json({
