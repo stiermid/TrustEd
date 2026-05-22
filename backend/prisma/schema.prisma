@@ -1,0 +1,109 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum EnrollmentStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum ConnectionStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+model User {
+  id                  String   @id @default(uuid())
+  supabaseId          String   @unique
+  email               String   @unique
+  name                String
+  avatarUrl           String?
+  role                Role     @default(USER)
+  linkedinConnected   Boolean  @default(false)
+  linkedinProfileUrl  String?
+  createdAt           DateTime @default(now())
+
+  reviews             Review[]
+  enrollments         Enrollment[]
+  sentConnections     Connection[] @relation("Requester")
+  receivedConnections Connection[] @relation("Receiver")
+  verifiedEnrollments Enrollment[] @relation("VerifiedBy")
+  createdCourses      Course[]
+}
+
+model Course {
+  id          String   @id @default(uuid())
+  title       String
+  provider    String
+  description String?
+  url         String?
+  logoUrl     String?
+  category    String?
+  duration    String?
+  skills      String[]
+  careerPaths String[]
+  featured    Boolean  @default(false)
+  createdById String
+  createdAt   DateTime @default(now())
+
+  createdBy   User         @relation(fields: [createdById], references: [id])
+  reviews     Review[]
+  enrollments Enrollment[]
+}
+
+model Enrollment {
+  id           String           @id @default(uuid())
+  userId       String
+  courseId     String
+  status       EnrollmentStatus @default(PENDING)
+  verifiedAt   DateTime?
+  verifiedById String?
+  createdAt    DateTime         @default(now())
+
+  user       User    @relation(fields: [userId], references: [id])
+  course     Course  @relation(fields: [courseId], references: [id])
+  verifiedBy User?   @relation("VerifiedBy", fields: [verifiedById], references: [id])
+
+  @@unique([userId, courseId])
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  userId    String
+  courseId  String
+  rating    Int
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id])
+  course Course @relation(fields: [courseId], references: [id])
+
+  @@unique([userId, courseId])
+}
+
+model Connection {
+  id          String           @id @default(uuid())
+  requesterId String
+  receiverId  String
+  status      ConnectionStatus @default(PENDING)
+  createdAt   DateTime         @default(now())
+
+  requester User @relation("Requester", fields: [requesterId], references: [id])
+  receiver  User @relation("Receiver", fields: [receiverId], references: [id])
+
+  @@unique([requesterId, receiverId])
+}
