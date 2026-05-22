@@ -49,6 +49,19 @@ router.get('/discover/courses/:courseId', authenticate, async (req, res) => {
   }
 });
 
+// GET /connections/sent
+router.get('/connections/sent', authenticate, async (req, res) => {
+  try {
+    const sent = await prisma.connection.findMany({
+      where: { requesterId: req.user.id, status: 'PENDING' },
+      include: { receiver: { select: { id: true, name: true, avatarUrl: true } } },
+    });
+    res.json({ data: sent.map(c => ({ id: c.id, receiver: c.receiver, createdAt: c.createdAt })) });
+  } catch (err) {
+    res.status(500).json({ error: { code: 'INTERNAL_ERROR', message: 'Unexpected error.' } });
+  }
+});
+
 // POST /connections
 router.post('/connections', authenticate, async (req, res) => {
   try {
@@ -145,6 +158,21 @@ router.patch('/connections/:id', authenticate, async (req, res) => {
     });
 
     res.json(updated);
+  } catch (err) {
+    res.status(500).json({ error: { code: 'INTERNAL_ERROR', message: 'Unexpected error.' } });
+  }
+});
+
+// DELETE /connections/:id
+router.delete('/connections/:id', authenticate, async (req, res) => {
+  try {
+    const conn = await prisma.connection.findUnique({ where: { id: req.params.id } });
+    if (!conn) return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Connection not found.' } });
+    if (conn.requesterId !== req.user.id && conn.receiverId !== req.user.id) {
+      return res.status(403).json({ error: { code: 'FORBIDDEN', message: 'Not authorized.' } });
+    }
+    await prisma.connection.delete({ where: { id: req.params.id } });
+    res.status(204).end();
   } catch (err) {
     res.status(500).json({ error: { code: 'INTERNAL_ERROR', message: 'Unexpected error.' } });
   }
