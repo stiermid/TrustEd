@@ -24,7 +24,7 @@ export default function HeroPage() {
   async function handleLinkedIn() {
     await supabase.auth.signInWithOAuth({
       provider: 'linkedin_oidc',
-      options: { redirectTo: window.location.origin + '/courses' },
+      options: { redirectTo: window.location.origin },
     });
   }
 
