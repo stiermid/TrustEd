@@ -242,14 +242,14 @@ export default function AdminPage() {
                         <p style={{ margin: 0, fontWeight: 700, fontSize: 14, color: '#191919' }}>{e.user.name}</p>
                         <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 3 }}>
                           <span className={`badge badge-${e.status.toLowerCase()}`}>{e.status}</span>
-                          {e.user.linkedinConnected && e.user.linkedinProfileUrl
+                          {e.user.linkedinProfileUrl
                             ? <a href={e.user.linkedinProfileUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: 'var(--accent)' }}>LinkedIn ↗</a>
-                            : <span style={{ fontSize: 12, color: '#888' }}>No LinkedIn</span>}
+                            : <span style={{ fontSize: 12, color: '#dc2626' }}>No LinkedIn URL</span>}
                         </div>
                       </div>
                       {e.status === 'PENDING' && (
                         <div style={{ display: 'flex', gap: 8 }}>
-                          <button className="btn btn-sm" disabled={actionId === e.id || !e.user.linkedinConnected} title={!e.user.linkedinConnected ? 'User must connect LinkedIn first' : ''} onClick={() => handleVerify(e.id, 'VERIFIED')}>Verify</button>
+                          <button className="btn btn-sm" disabled={actionId === e.id || !e.user.linkedinProfileUrl} title={!e.user.linkedinProfileUrl ? 'User has no LinkedIn profile URL' : ''} onClick={() => handleVerify(e.id, 'VERIFIED')}>Verify</button>
                           <button className="btn-outline btn-sm" disabled={actionId === e.id} onClick={() => handleVerify(e.id, 'REJECTED')}>Reject</button>
                         </div>
                       )}

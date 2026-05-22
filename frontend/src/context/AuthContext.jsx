@@ -34,6 +34,7 @@ export function AuthProvider({ children }) {
         avatarUrl: session.user.user_metadata?.avatar_url || null,
         role: 'USER',
         linkedinConnected: false,
+        linkedinProfileUrl: null,
       });
     } finally {
       setLoading(false);

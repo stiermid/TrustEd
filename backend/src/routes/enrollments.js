@@ -38,6 +38,10 @@ router.post('/courses/:courseId/enroll', authenticate, async (req, res) => {
       return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Course not found.' } });
     }
 
+    if (!req.user.linkedinProfileUrl) {
+      return res.status(403).json({ error: { code: 'LINKEDIN_REQUIRED', message: 'You must add your LinkedIn profile URL before enrolling.' } });
+    }
+
     const existing = await prisma.enrollment.findUnique({
       where: { userId_courseId: { userId: req.user.id, courseId } },
     });

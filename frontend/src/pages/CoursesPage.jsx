@@ -23,6 +23,15 @@ const INSTITUTION_META = {
     website: 'https://www.coursera.org',
     initial: 'C',
   },
+  'Udemy': {
+    displayName: 'Udemy',
+    brandColor: '#A435F0',
+    lightColor: '#F5EBFE',
+    category: 'Online Learning',
+    location: 'San Francisco, CA',
+    website: 'https://www.udemy.com',
+    initial: 'U',
+  },
 };
 
 function getMeta(provider) {
@@ -129,6 +138,7 @@ export default function CoursesPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedProvider, setSelectedProvider] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const navigate = useNavigate();
 
   const fetchCourses = useCallback(async () => {
@@ -148,15 +158,31 @@ export default function CoursesPage() {
     return map;
   }, [allCourses]);
 
+  const categories = useMemo(() => {
+    const seen = new Set();
+    allCourses.forEach(c => { if (c.category) seen.add(c.category); });
+    return Array.from(seen).sort();
+  }, [allCourses]);
+
   const searchResults = useMemo(() => {
     if (!search.trim()) return [];
     const q = search.toLowerCase();
     return allCourses.filter(c => c.title.toLowerCase().includes(q) || c.provider.toLowerCase().includes(q) || c.category?.toLowerCase().includes(q));
   }, [search, allCourses]);
 
-  const drillCourses = selectedProvider ? (providers[selectedProvider] || []) : [];
+  const categoryResults = useMemo(() => {
+    if (!selectedCategory) return [];
+    return allCourses.filter(c => c.category === selectedCategory);
+  }, [selectedCategory, allCourses]);
+
+  const drillCourses = useMemo(() => {
+    const base = selectedProvider ? (providers[selectedProvider] || []) : [];
+    return selectedCategory ? base.filter(c => c.category === selectedCategory) : base;
+  }, [selectedProvider, providers, selectedCategory]);
+
   const isSearching = search.trim().length > 0;
   const isDrilling = !!selectedProvider && !isSearching;
+  const isFiltering = !!selectedCategory && !isSearching && !isDrilling;
 
   return (
     <>
@@ -167,7 +193,7 @@ export default function CoursesPage() {
         <div style={{ paddingTop: 32, paddingBottom: 20 }}>
           {isDrilling ? (
             <>
-              <button onClick={() => setSelectedProvider(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#666', fontSize: 13, padding: 0, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 5 }}>← All Schools</button>
+              <button onClick={() => { setSelectedProvider(null); setSelectedCategory(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#666', fontSize: 13, padding: 0, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 5 }}>← All Schools</button>
               <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                 {(() => { const m = getMeta(selectedProvider); return (
                   <div style={{ width: 52, height: 52, borderRadius: 10, background: m.brandColor, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -188,14 +214,38 @@ export default function CoursesPage() {
           )}
         </div>
 
-        {/* Search (only on main view) */}
+        {/* Search + category pills (only on main / filtering view) */}
         {!isDrilling && (
-          <div style={{ position: 'relative', maxWidth: 480, marginBottom: 28 }}>
-            <svg style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#9e9e9e', pointerEvents: 'none' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-            <input className="input" placeholder="Search schools or programs…" value={search}
-              onChange={e => { setSearch(e.target.value); setSelectedProvider(null); }}
-              style={{ paddingLeft: 42, borderRadius: 28, height: 44 }} />
-          </div>
+          <>
+            <div style={{ position: 'relative', maxWidth: 480, marginBottom: 16 }}>
+              <svg style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#9e9e9e', pointerEvents: 'none' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              <input className="input" placeholder="Search schools or programs…" value={search}
+                onChange={e => { setSearch(e.target.value); setSelectedProvider(null); setSelectedCategory(null); }}
+                style={{ paddingLeft: 42, borderRadius: 28, height: 44 }} />
+            </div>
+            {categories.length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 24 }}>
+                <button
+                  onClick={() => setSelectedCategory(null)}
+                  style={{ padding: '5px 14px', borderRadius: 20, fontSize: 13, fontWeight: 500, cursor: 'pointer', border: '1.5px solid', transition: 'all 0.15s',
+                    borderColor: !selectedCategory ? '#057642' : '#E0E0E0',
+                    background: !selectedCategory ? '#f0fdf4' : '#fff',
+                    color: !selectedCategory ? '#057642' : '#555' }}>
+                  All
+                </button>
+                {categories.map(cat => (
+                  <button key={cat}
+                    onClick={() => { setSelectedCategory(prev => prev === cat ? null : cat); setSelectedProvider(null); }}
+                    style={{ padding: '5px 14px', borderRadius: 20, fontSize: 13, fontWeight: 500, cursor: 'pointer', border: '1.5px solid', transition: 'all 0.15s',
+                      borderColor: selectedCategory === cat ? '#057642' : '#E0E0E0',
+                      background: selectedCategory === cat ? '#f0fdf4' : '#fff',
+                      color: selectedCategory === cat ? '#057642' : '#555' }}>
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            )}
+          </>
         )}
 
         {loading ? <div className="loading">Loading…</div> : (
@@ -208,6 +258,18 @@ export default function CoursesPage() {
                 ? <div className="empty">No courses found.</div>
                 : <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 14 }}>
                     {searchResults.map(c => <CourseCard key={c.id} course={c} onClick={() => navigate(`/courses/${c.id}`)} />)}
+                  </div>
+              }
+            </div>
+
+          /* ── Category filter results ── */
+          ) : isFiltering ? (
+            <div>
+              <p style={{ fontSize: 13, color: '#888', marginBottom: 16 }}>{categoryResults.length} program{categoryResults.length !== 1 ? 's' : ''} in <strong>{selectedCategory}</strong></p>
+              {categoryResults.length === 0
+                ? <div className="empty">No courses found.</div>
+                : <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 14 }}>
+                    {categoryResults.map(c => <CourseCard key={c.id} course={c} onClick={() => navigate(`/courses/${c.id}`)} />)}
                   </div>
               }
             </div>

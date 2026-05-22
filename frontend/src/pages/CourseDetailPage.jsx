@@ -106,6 +106,7 @@ export default function CourseDetailPage() {
       setEnrollStatus('PENDING');
     } catch (err) {
       if (err.status === 409) setEnrollStatus('PENDING');
+      else if (err.status === 403) navigate('/profile');
       else console.error(err);
     } finally { setEnrolling(false); }
   }
@@ -195,6 +196,8 @@ export default function CourseDetailPage() {
               ? <span style={{ fontSize: 13, color: '#888', padding: '8px 16px', border: '1px solid #E0E0E0', borderRadius: 8, background: '#fff', display: 'block' }}>⏳ Enrollment pending</span>
               : enrollStatus === 'REJECTED'
               ? <span style={{ fontSize: 13, color: '#dc2626', padding: '8px 16px', border: '1px solid #fca5a5', borderRadius: 8, background: '#fef2f2', display: 'block' }}>❌ Enrollment rejected</span>
+              : !user.linkedinProfileUrl
+              ? <span style={{ fontSize: 13, color: '#0a66c2', padding: '8px 16px', border: '1px solid #0a66c230', borderRadius: 8, background: '#EBF2FF', display: 'block', cursor: 'pointer' }} onClick={() => navigate('/profile')}>🔗 Add LinkedIn profile to enroll</span>
               : !myReview && <button className="btn" onClick={handleEnroll} disabled={enrolling} style={{ borderRadius: 8 }}>{enrolling ? 'Enrolling…' : 'Enroll to Review'}</button>
             }
           </div>

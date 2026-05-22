@@ -65,6 +65,7 @@ router.post('/sync', async (req, res) => {
       avatarUrl: dbUser.avatarUrl,
       role: dbUser.role,
       linkedinConnected: dbUser.linkedinConnected,
+      linkedinProfileUrl: dbUser.linkedinProfileUrl,
     });
   } catch (err) {
     res.status(500).json({ error: { code: 'INTERNAL_ERROR', message: 'Unexpected error.' } });
