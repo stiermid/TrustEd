@@ -4,6 +4,30 @@ const prisma = require('../lib/prisma');
 const authenticate = require('../middleware/authenticate');
 const requireAdmin = require('../middleware/requireAdmin');
 
+// GET /users/me/enrollments
+router.get('/users/me/enrollments', authenticate, async (req, res) => {
+  try {
+    const enrollments = await prisma.enrollment.findMany({
+      where: { userId: req.user.id },
+      include: {
+        course: { select: { id: true, title: true, provider: true, url: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json({
+      data: enrollments.map(e => ({
+        id: e.id,
+        status: e.status,
+        createdAt: e.createdAt,
+        verifiedAt: e.verifiedAt,
+        course: e.course,
+      })),
+    });
+  } catch (err) {
+    res.status(500).json({ error: { code: 'INTERNAL_ERROR', message: 'Unexpected error.' } });
+  }
+});
+
 // POST /courses/:courseId/enroll
 router.post('/courses/:courseId/enroll', authenticate, async (req, res) => {
   try {

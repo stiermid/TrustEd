@@ -50,6 +50,12 @@ model Course {
   provider    String
   description String?
   url         String?
+  logoUrl     String?
+  category    String?
+  duration    String?
+  skills      String[]
+  careerPaths String[]
+  featured    Boolean  @default(false)
   createdById String
   createdAt   DateTime @default(now())
 

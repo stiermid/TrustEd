@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const prisma = require('../lib/prisma');
 const authenticate = require('../middleware/authenticate');
+const requireAdmin = require('../middleware/requireAdmin');
 const { anonymizeReviews } = require('../utils/anonymize');
 
 // GET /courses/:courseId/reviews
@@ -9,11 +10,14 @@ router.get('/courses/:courseId/reviews', authenticate, async (req, res) => {
   try {
     const { courseId } = req.params;
 
+    const { sort = 'newest' } = req.query;
+    const orderBy = sort === 'rating' ? { rating: 'desc' } : { createdAt: 'desc' };
+
     const [reviews, connections] = await Promise.all([
       prisma.review.findMany({
         where: { courseId },
         include: { user: { select: { id: true, name: true, avatarUrl: true } } },
-        orderBy: { createdAt: 'desc' },
+        orderBy,
       }),
       prisma.connection.findMany({
         where: {
@@ -105,6 +109,18 @@ router.delete('/reviews/:id', authenticate, async (req, res) => {
 
     await prisma.review.delete({ where: { id: req.params.id } });
     res.status(204).send();
+  } catch (err) {
+    res.status(500).json({ error: { code: 'INTERNAL_ERROR', message: 'Unexpected error.' } });
+  }
+});
+
+// DELETE /reviews/:id/admin (Admin — moderate any review)
+router.delete('/reviews/:id/admin', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const review = await prisma.review.findUnique({ where: { id: req.params.id } });
+    if (!review) return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Review not found.' } });
+    await prisma.review.delete({ where: { id: req.params.id } });
+    res.status(204).end();
   } catch (err) {
     res.status(500).json({ error: { code: 'INTERNAL_ERROR', message: 'Unexpected error.' } });
   }
