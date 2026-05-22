@@ -5,11 +5,11 @@ import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/layout/Navbar';
 
 const PROVIDER_COLORS = {
-  'holberton': { bg: '#00C17C', light: '#E6FBF3' },
-  'coursera':  { bg: '#0056D3', light: '#EBF2FF' },
-  'mit':       { bg: '#A31F34', light: '#FDEAED' },
-  'udemy':     { bg: '#A435F0', light: '#F5EBFE' },
-  'google':    { bg: '#4285F4', light: '#EBF2FF' },
+  'holberton':   { bg: '#00C17C', light: '#E6FBF3' },
+  'peerstack':   { bg: '#0EA5E9', light: '#E0F2FE' },
+  'div academy': { bg: '#F97316', light: '#FFF0E6' },
+  'mit':         { bg: '#A31F34', light: '#FDEAED' },
+  'google':      { bg: '#4285F4', light: '#EBF2FF' },
 };
 function providerColor(name = '') {
   const k = name.toLowerCase();
