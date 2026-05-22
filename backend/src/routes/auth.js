@@ -19,6 +19,14 @@ router.post('/sync', async (req, res) => {
       return res.status(401).json({ error: { code: 'INVALID_TOKEN', message: 'Invalid or expired token.' } });
     }
 
+    const meta = user.user_metadata || {};
+    const resolvedName =
+      meta.full_name ||
+      meta.name ||
+      [meta.given_name, meta.family_name].filter(Boolean).join(' ') ||
+      user.email;
+    const resolvedAvatar = meta.avatar_url || meta.picture || null;
+
     let dbUser = await prisma.user.findUnique({ where: { supabaseId: user.id } });
 
     if (!dbUser) {
@@ -26,8 +34,16 @@ router.post('/sync', async (req, res) => {
         data: {
           supabaseId: user.id,
           email: user.email,
-          name: user.user_metadata?.full_name || user.email,
-          avatarUrl: user.user_metadata?.avatar_url || null,
+          name: resolvedName,
+          avatarUrl: resolvedAvatar,
+        },
+      });
+    } else if (dbUser.name === dbUser.email || !dbUser.avatarUrl) {
+      dbUser = await prisma.user.update({
+        where: { supabaseId: user.id },
+        data: {
+          ...(dbUser.name === dbUser.email && { name: resolvedName }),
+          ...(!dbUser.avatarUrl && resolvedAvatar && { avatarUrl: resolvedAvatar }),
         },
       });
     }
